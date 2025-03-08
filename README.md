@@ -1,5 +1,9 @@
 # MacOS Based Browser Tab Switcher Installation Guide
 
+# Demo - 
+![image](https://github.com/user-attachments/assets/09198b45-2895-429e-ba62-e7a57015fabd)
+
+
 1. **Get the Extension**
     - Clone this repository, or
     - Download as ZIP and extract
