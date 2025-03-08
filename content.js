@@ -99,37 +99,82 @@ function handleSearch(e) {
       tab.title.toLowerCase().includes(query) ||
       tab.url.toLowerCase().includes(query)
   );
+  if (filteredTabs.length === 0) {
+    //go for almost similar word containing tabs
+    const similarTabs = allTabs.filter((tab) => {
+      const words = query.split(" ");
+      const tabWords = tab.title.toLowerCase().split(" ");
+      const urlWords = tab.url.toLowerCase().split(" ");
+
+      return words.some(
+        (word) =>
+          tabWords.some((tabWord) => levenshteinDistance(word, tabWord) <= 2) ||
+          urlWords.some((urlWord) => levenshteinDistance(word, urlWord) <= 2)
+      );
+    });
+    if (similarTabs.length > 0) {
+      return renderTabs(similarTabs);
+    }
+
+    function levenshteinDistance(a, b) {
+      if (a.length === 0) return b.length;
+      if (b.length === 0) return a.length;
+
+      const matrix = Array(a.length + 1)
+        .fill()
+        .map(() => Array(b.length + 1).fill(0));
+
+      for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+      for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + cost
+          );
+        }
+      }
+      return matrix[a.length][b.length];
+    }
+  }
   renderTabs(filteredTabs);
 }
 
 // Helper function to get default favicon path
 function getDefaultFavicon() {
-  return chrome.runtime.getURL("icons/default-favicon.png") || "icons/default-favicon.png";
+  return chrome.runtime.getURL("images/icon.png") || "icon/icon.png";
 }
 
 // Helper function to create favicon with proper error handling
 function createFavicon(tab) {
+  return;
   const favicon = document.createElement("img");
   favicon.className = "tab-favicon";
-  
+
   // Set default first to prevent flashing of broken image
   const defaultIcon = getDefaultFavicon();
-  
+
   // Only attempt to use the tab's favicon if it exists and is not empty
   if (tab.favIconUrl && tab.favIconUrl.trim() !== "") {
     favicon.src = tab.favIconUrl;
-    
+    favicon.alt = null;
+
     // Comprehensive error handling
-    favicon.onerror = function() {
+    favicon.onerror = function () {
       // Log the error for debugging
-      console.warn(`Failed to load favicon for tab: ${tab.id}, URL: ${tab.url}`);
-      
+      console.warn(
+        `Failed to load favicon for tab: ${tab.id}, URL: ${tab.url}`
+      );
+
       // Set to default icon
-      this.src = defaultIcon;
-      
+      this.src = null;
+
       // Remove onerror handler to prevent potential infinite loops
       this.onerror = null;
-      
+
       // Add a class that could be used for styling fallback icons
       this.classList.add("fallback-favicon");
     };
@@ -138,10 +183,10 @@ function createFavicon(tab) {
     favicon.src = defaultIcon;
     favicon.classList.add("fallback-favicon");
   }
-  
+
   // Add extra protection against CORS issues
   favicon.crossOrigin = "anonymous";
-  
+
   return favicon;
 }
 
@@ -166,8 +211,6 @@ function renderTabs(tabs) {
 
     // Create favicon with enhanced error handling
     // const favicon = createFavicon(tab);
-    const favicon = document.createElement("span");
-    favicon.style.width = "100px";
 
     // Create title and url elements
     const titleElement = document.createElement("div");
@@ -184,7 +227,7 @@ function renderTabs(tabs) {
     tabInfo.appendChild(titleElement);
     tabInfo.appendChild(urlElement);
 
-    tabElement.appendChild(favicon);
+    // tabElement.appendChild(favicon);
     tabElement.appendChild(tabInfo);
 
     // Add click handler
