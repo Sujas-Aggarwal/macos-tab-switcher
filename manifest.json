@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Browser Tab Switcher",
+  "version": "1.0",
+  "description": "Switch tabs easily with a keyboard shortcut and search functionality",
+  "permissions": ["tabs"],
+  "action": {
+    "default_icon": {
+      "16": "images/icon.png",
+      "48": "images/icon.png",
+      "128": "images/icon.png"
+    }
+  },
+  "icons": {
+    "16": "images/icon.png",
+    "48": "images/icon.png",
+    "128": "images/icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-tab-switcher": {
+      "suggested_key": {
+        "default": "Ctrl+P"
+      },
+      "description": "Open tab switcher"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["switcher.css"]
+    }
+  ]
+}
